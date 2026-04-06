@@ -1,0 +1,6 @@
+{
+  "outputDirectory": "build",
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+}git add vercel.json
+git commit -m "Set output directory to build"
+git push origin main
