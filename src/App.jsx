@@ -23,6 +23,7 @@ import { Interns } from './components/Interns';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { SharedDataProvider } from './contexts/SharedDataContext';
 import { ThemeProvider } from './contexts/ThemeContext';
+import VerifyRegistration from './components/VerifyRegistration';  // <-- NEW
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -102,6 +103,7 @@ function AppContent() {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/verify-registration" element={<VerifyRegistration />} />  {/* <-- NEW ROUTE */}
       <Route
         path="/*"
         element={
