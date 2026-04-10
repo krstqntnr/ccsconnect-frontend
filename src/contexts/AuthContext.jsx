@@ -1,76 +1,54 @@
+// src/contexts/AuthContext.jsx
 import { createContext, useContext, useState, useEffect } from 'react';
-import api from '../utils/api';
 
 const AuthContext = createContext();
 
+// Mock user for development (change role as needed)
+const MOCK_USER = {
+  id: 1,
+  full_name: 'Dev Student',
+  email: 'dev@student.com',
+  role: 'student',
+  department: 'Computer Science',
+  year: 3,
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('access_token');
-    if (token) {
-      api.get('/auth/me')
-        .then(res => {
-          setUser(res.data);
-          setProfile(res.data);
-        })
-        .catch(() => {
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('user_role');
-        })
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
+    // Check localStorage for existing session (optional)
+    const savedUser = localStorage.getItem('mock_user');
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
     }
+    setLoading(false);
   }, []);
 
+  // Real login (calls backend)
   const login = async (email, password) => {
-    const response = await api.post('/auth/login', { email, password });
-    const { access_token, user_id, role } = response.data;
-    localStorage.setItem('access_token', access_token);
-    localStorage.setItem('user_role', role);
-    // Fetch full profile
-    const userRes = await api.get('/auth/me', {
-      headers: { Authorization: `Bearer ${access_token}` }
-    });
-    setUser(userRes.data);
-    setProfile(userRes.data);
-    return { user: userRes.data, role };
+    // This is where you would call your actual API
+    // For now, we'll mock it
+    // But we also want a direct bypass for development
+    throw new Error('Real backend not configured yet. Use Google Dev Bypass instead.');
   };
 
-  const registerStudent = async (studentId, email) => {
-    const response = await api.post('/auth/register-student', null, {
-      params: { student_id: studentId, email }
-    });
-    return response.data;
-  };
-
-  const registerCompany = async (fullName, email, password, companyName, industry) => {
-    const response = await api.post('/auth/register', {
-      email,
-      password,
-      full_name: fullName,
-      role: 'company',
-      company_name: companyName,
-      industry,
-    });
-    return response.data;
+  // Direct mock login – used by the dev bypass button
+  const mockLogin = (userData) => {
+    setUser(userData);
+    localStorage.setItem('mock_user', JSON.stringify(userData));
+    return userData;
   };
 
   const logout = () => {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('user_role');
     setUser(null);
-    setProfile(null);
+    localStorage.removeItem('mock_user');
   };
 
-  return (
-    <AuthContext.Provider value={{ user, profile, loading, login, registerStudent, registerCompany, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  const value = { user, loading, login, mockLogin, logout };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => {

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock } from 'lucide-react';
+import { Mail, Lock, Chrome } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -11,23 +11,50 @@ export const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const [devRole, setDevRole] = useState('student'); // default role
+  const { login, mockLogin } = useAuth();
   const navigate = useNavigate();
 
+  // Normal email/password login (will likely fail, but keep for later)
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const { user, role } = await login(email, password);
-      if (role === 'student') navigate('/');
-      else if (role === 'company') navigate('/dashboard');
-      else if (role === 'admin') navigate('/dashboard');
-      else navigate('/');
+      const user = await login(email, password);
+      const role = user?.role || 'student';
+      redirectByRole(role);
     } catch (error) {
-      alert('Login failed: ' + (error.response?.data?.detail || error.message));
+      alert('Login failed: ' + (error.message || 'Backend not ready. Use Google Dev Bypass.'));
     } finally {
       setLoading(false);
     }
+  };
+
+  // Helper to redirect based on role
+  const redirectByRole = (role) => {
+    if (role === 'student') navigate('/dashboard/student');
+    else if (role === 'company') navigate('/dashboard/company');
+    else if (role === 'admin') navigate('/dashboard/admin');
+    else navigate('/');
+  };
+
+  // 🚀 DEV BYPASS: Instant login with selected role
+  const handleDevLogin = () => {
+    let dashboardPath = '/dashboard/student';
+    if (devRole === 'company') dashboardPath = '/dashboard/company';
+    if (devRole === 'admin') dashboardPath = '/dashboard/admin';
+
+    const mockUser = {
+      id: 999,
+      full_name: `Dev ${devRole.charAt(0).toUpperCase() + devRole.slice(1)}`,
+      email: `dev@${devRole}.com`,
+      role: devRole,
+      department: devRole === 'student' ? 'Computer Science' : undefined,
+      year: devRole === 'student' ? 3 : undefined,
+      company_name: devRole === 'company' ? 'DevCorp' : undefined,
+    };
+    mockLogin(mockUser);
+    navigate(dashboardPath);
   };
 
   return (
@@ -106,6 +133,67 @@ export const Login = () => {
                   {loading ? 'Signing in...' : 'Sign In'}
                 </Button>
               </form>
+
+              {/* 🔧 DEV BYPASS SECTION */}
+              <div className="relative my-4">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300"></div>
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white/95 px-2 text-gray-500">Development Bypass</span>
+                </div>
+              </div>
+
+              {/* Role selector */}
+              <div className="mb-3">
+                <Label className="text-gray-700 text-sm">Select Role</Label>
+                <div className="flex gap-3 mt-1">
+                  <label className="flex items-center gap-1 text-sm text-gray-700">
+                    <input
+                      type="radio"
+                      name="devRole"
+                      value="student"
+                      checked={devRole === 'student'}
+                      onChange={(e) => setDevRole(e.target.value)}
+                      className="w-4 h-4"
+                    />
+                    Student
+                  </label>
+                  <label className="flex items-center gap-1 text-sm text-gray-700">
+                    <input
+                      type="radio"
+                      name="devRole"
+                      value="company"
+                      checked={devRole === 'company'}
+                      onChange={(e) => setDevRole(e.target.value)}
+                      className="w-4 h-4"
+                    />
+                    Company
+                  </label>
+                  <label className="flex items-center gap-1 text-sm text-gray-700">
+                    <input
+                      type="radio"
+                      name="devRole"
+                      value="admin"
+                      checked={devRole === 'admin'}
+                      onChange={(e) => setDevRole(e.target.value)}
+                      className="w-4 h-4"
+                    />
+                    Admin
+                  </label>
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full h-12 border-gray-300 text-gray-700 hover:bg-gray-100"
+                onClick={handleDevLogin}
+              >
+                <Chrome className="w-5 h-5 mr-2" />
+                Instant Login as {devRole.charAt(0).toUpperCase() + devRole.slice(1)}
+              </Button>
+
               <div className="text-center text-sm text-gray-600 mt-4">
                 <Link to="/forgot-password" className="text-gray-700 hover:text-gray-900 font-medium">
                   Forgot your password?
